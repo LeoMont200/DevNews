@@ -1,0 +1,149 @@
+package com.avanade.devnews.ui.login
+
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.avanade.devnews.R
+import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
+import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
+import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
+import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
+
+@Composable
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    onLoginClick: (username: String, password: String, rememberMe: Boolean) -> Unit = { _, _, _ -> },
+    onForgotPasswordClick: () -> Unit = {}
+) {
+    val spacing = DevNewsDesignTokens.spacing
+    var username by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var rememberMe by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = spacing.large)
+            .padding(top = spacing.large),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.55f)
+                .height(220.dp)
+                .width(320.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.background,
+                    shape = DevNewsDesignTokens.cardShape
+                ),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Image(
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                painter = painterResource(id = R.drawable.logo_devnews),
+                contentDescription = "DevNews Logo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 12.dp)
+            )
+            Text(
+                text = "Bem-vindo ao DevNews!",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        Spacer(modifier = Modifier.height(spacing.medium))
+
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(spacing.medium)
+        ) {
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = spacing.small),
+                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            ) {
+                DevNewsSearchField(
+                    value = username,
+                    onValueChange = { username = it },
+                    placeholder = "Username"
+                )
+                DevNewsSearchField(
+                    value = password,
+                    onValueChange = { password = it },
+                    placeholder = "Password"
+                )
+                DevNewsPrimaryActionButton(
+                    text = "Login",
+                    onClick = { onLoginClick(username, password, rememberMe) }
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = rememberMe,
+                            onCheckedChange = { rememberMe = it }
+                        )
+                        Text(
+                            text = "Remember me",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                    TextButton(onClick = onForgotPasswordClick) {
+                        Text(
+                            text = "Forgot password?",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LoginScreenPreview() {
+    DevNewsTheme {
+        LoginScreen()
+    }
+}
