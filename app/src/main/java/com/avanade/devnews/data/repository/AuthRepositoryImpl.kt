@@ -1,0 +1,46 @@
+package com.avanade.devnews.data.repository
+import com.avanade.devnews.domain.model.User
+import com.avanade.devnews.domain.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuth
+import javax.inject.Inject
+import kotlinx.coroutines.tasks.await
+
+class AuthRepositoryImpl @Inject constructor(
+    private val firebaseAuth: FirebaseAuth
+) : AuthRepository {
+
+    override suspend fun login(email: String, password: String): Result<User> {
+
+        return try {
+
+            val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+
+            val firebaseUser = authResult.user
+
+            val user = User(
+                id = firebaseUser?.uid ?: "",
+                name = firebaseUser?.displayName ?: "",
+                email = firebaseUser?.email ?: ""
+            )
+
+            Result.success(user)
+        } catch(e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun getCurrentUser(): User? {
+                                                //elvis
+        val firebaseUser = firebaseAuth.currentUser ?: return null
+
+        return User(
+            id = firebaseUser.uid,
+            name = firebaseUser.displayName ?: "",
+            email = firebaseUser.email ?: ""
+        )
+    }
+
+    override fun logout() {
+       firebaseAuth.signOut()
+    }
+}

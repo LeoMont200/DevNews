@@ -3,8 +3,10 @@ package com.avanade.devnews
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.avanade.devnews.feature.auth.login.presentation.LoginViewModel
 import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.login.LoginScreen
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import dagger.hilt.android.AndroidEntryPoint
 
 private enum class MainScreen {
     HOME,
@@ -33,7 +37,10 @@ private enum class MainScreen {
     LOGIN
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val loginViewModel: LoginViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val firebaseAnalytics = FirebaseAnalytics.getInstance(this)
@@ -41,6 +48,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             var currentScreen by remember { mutableStateOf(MainScreen.HOME) }
+
+            BackHandler(enabled = currentScreen != MainScreen.HOME) {
+                currentScreen = MainScreen.HOME
+            }
 
             DevNewsTheme {
                 when (currentScreen) {
