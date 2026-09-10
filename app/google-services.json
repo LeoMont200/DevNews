@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "263923033785",
+    "project_id": "devnews-a0fc4",
+    "storage_bucket": "devnews-a0fc4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:263923033785:android:b1b13f3b0a089d1dad5d68",
+        "android_client_info": {
+          "package_name": "com.avanade.devnews"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMTLzGTM-GeUCp5eJVJDjgensAmQbCjNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
