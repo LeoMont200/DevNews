@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -119,6 +120,15 @@ fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
                     onCategorySelected = { selectedCategory = it },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            item {
+                Button(
+                    onClick = { throw RuntimeException("Test Crash") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Test Crash")
+                }
             }
         }
     }

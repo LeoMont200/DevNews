@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+
+
+
+
 }
 
 android {
@@ -46,6 +51,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation(libs.firebase.analytics)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     ksp(libs.hilt.compiler)
