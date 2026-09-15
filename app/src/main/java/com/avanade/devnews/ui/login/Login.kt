@@ -43,7 +43,8 @@ import com.google.firebase.analytics.logEvent
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onGoToRegister: () -> Unit = {}
 ) {
     val spacing = DevNewsDesignTokens.spacing
     val uiState by viewModel.uiState.collectAsState()
@@ -161,6 +162,27 @@ fun LoginScreen(
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = spacing.medium),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Ainda não tem conta?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            TextButton(onClick = onGoToRegister) {
+                Text(
+                    text = "Register",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 
