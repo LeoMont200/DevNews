@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -27,8 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.R
+import com.avanade.devnews.feature.auth.register.presentation.RegisterViewModel
 import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
+import com.avanade.devnews.ui.designsystem.components.DevNewsPasswordField
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
@@ -36,12 +41,22 @@ import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
 @Composable
 fun RegisterScreen(
     modifier: Modifier = Modifier,
+    viewModel: RegisterViewModel = hiltViewModel(),
+    onRegisterSuccess: () -> Unit = {},
     onGoToLogin: () -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsState()
     val spacing = DevNewsDesignTokens.spacing
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onRegisterSuccess()
+            viewModel.resetRegisterSuccess()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -102,21 +117,29 @@ fun RegisterScreen(
                     onValueChange = { email = it },
                     placeholder = "Email"
                 )
-                DevNewsSearchField(
+                DevNewsPasswordField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = "Senha"
                 )
-                DevNewsSearchField(
+                DevNewsPasswordField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
                     placeholder = "Confirmar senha",
                 )
 
                 DevNewsPrimaryActionButton(
-                    text = "Cadastrar",
-                    onClick = {}
+                    text = if (uiState.isLoading) "Cadastrando..." else "Cadastrar",
+                    onClick = {
+                        viewModel.register(email, password, confirmPassword)
+                    }
                 )
+                uiState.error?.takeIf { it.isNotBlank() }?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
 

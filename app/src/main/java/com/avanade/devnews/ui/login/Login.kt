@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.R
 import com.avanade.devnews.feature.auth.login.presentation.LoginViewModel
 import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
+import com.avanade.devnews.ui.designsystem.components.DevNewsPasswordField
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
@@ -116,7 +117,7 @@ fun LoginScreen(
                     onValueChange = { username = it },
                     placeholder = "Username"
                 )
-                DevNewsSearchField(
+                DevNewsPasswordField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = "Password"

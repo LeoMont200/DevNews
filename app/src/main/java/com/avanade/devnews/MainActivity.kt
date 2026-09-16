@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
                     }
                     MainScreen.REGISTER -> {
                         RegisterScreen(
+                            onRegisterSuccess = { currentScreen = MainScreen.LOGIN },
                             onGoToLogin = { currentScreen = MainScreen.LOGIN }
                         )
                     }
