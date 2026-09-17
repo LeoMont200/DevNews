@@ -1,13 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+
+
+
+
 }
 
 android {
     namespace = "com.avanade.devnews"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.avanade.devnews"
@@ -15,8 +21,6 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -37,18 +41,19 @@ android {
 
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
+    implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-auth")
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation(libs.firebase.analytics)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    testImplementation(libs.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    ksp(libs.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
