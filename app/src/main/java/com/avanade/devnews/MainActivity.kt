@@ -27,11 +27,13 @@ import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.theme.FlavorTheme
 import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.login.LoginScreen
+import com.avanade.devnews.ui.login.RecoveryScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 private enum class MainScreen {
     HOME,
     LOGIN,
+    RECOVERY,
     SHOWCASE
 }
 
@@ -58,7 +60,13 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     MainScreen.LOGIN -> {
-                        LoginScreen(onLoginSuccess = { currentScreen = MainScreen.SHOWCASE })
+                        LoginScreen(
+                            onLoginSuccess = { currentScreen = MainScreen.SHOWCASE },
+                            onForgotPasswordClick = { currentScreen = MainScreen.RECOVERY }
+                        )
+                    }
+                    MainScreen.RECOVERY -> {
+                        RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.LOGIN })
                     }
                     MainScreen.SHOWCASE -> {
                         DesignSystemShowcaseScreen()

@@ -43,7 +43,8 @@ import com.google.firebase.analytics.logEvent
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val spacing = DevNewsDesignTokens.spacing
     val uiState by viewModel.uiState.collectAsState()
@@ -151,7 +152,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onForgotPasswordClick) {
                         Text(
                             text = "Forgot password?",
                             style = MaterialTheme.typography.labelLarge
