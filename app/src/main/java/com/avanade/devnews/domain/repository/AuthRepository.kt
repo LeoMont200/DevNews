@@ -12,4 +12,8 @@ interface AuthRepository {
     fun getCurrentUser(): User?
 
     fun logout()
+
+    suspend fun recoverPassword(
+        email: String
+    ): Result<Unit>
 }
