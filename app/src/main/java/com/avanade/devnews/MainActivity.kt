@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.avanade.devnews.ui.cadastro.RegisterScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.theme.FlavorTheme
 import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
@@ -32,6 +33,7 @@ import dagger.hilt.android.AndroidEntryPoint
 private enum class MainScreen {
     HOME,
     LOGIN,
+    REGISTER,
     SHOWCASE
 }
 
@@ -54,11 +56,21 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(
                             currentFlavor = currentFlavor,
                             onFlavorSelected = { currentFlavor = it },
-                            onOpenLogin = { currentScreen = MainScreen.LOGIN }
+                            onOpenLogin = { currentScreen = MainScreen.LOGIN },
+                            onOpenRegister = { currentScreen = MainScreen.REGISTER }
                         )
                     }
                     MainScreen.LOGIN -> {
-                        LoginScreen(onLoginSuccess = { currentScreen = MainScreen.SHOWCASE })
+                        LoginScreen(
+                            onLoginSuccess = { currentScreen = MainScreen.SHOWCASE },
+                            onGoToRegister = { currentScreen = MainScreen.REGISTER }
+                        )
+                    }
+                    MainScreen.REGISTER -> {
+                        RegisterScreen(
+                            onRegisterSuccess = { currentScreen = MainScreen.LOGIN },
+                            onGoToLogin = { currentScreen = MainScreen.LOGIN }
+                        )
                     }
                     MainScreen.SHOWCASE -> {
                         DesignSystemShowcaseScreen()
@@ -72,7 +84,8 @@ class MainActivity : ComponentActivity() {
     private fun HomeScreen(
         currentFlavor: FlavorTheme,
         onFlavorSelected: (FlavorTheme) -> Unit,
-        onOpenLogin: () -> Unit
+        onOpenLogin: () -> Unit,
+        onOpenRegister: () -> Unit
     ) {
         var showFlavorMenu by remember { mutableStateOf(false) }
 
@@ -108,6 +121,11 @@ class MainActivity : ComponentActivity() {
                 Button(onClick = onOpenLogin) {
                     Text(text = "Login")
                 }
+
+                Button(onClick = onOpenRegister) {
+
+                    Text(text = "Register")
+                }
             }
         }
     }
@@ -119,7 +137,8 @@ class MainActivity : ComponentActivity() {
             HomeScreen(
                 currentFlavor = FlavorTheme.PROD,
                 onFlavorSelected = {},
-                onOpenLogin = {}
+                onOpenLogin = {},
+                onOpenRegister = {}
             )
         }
     }

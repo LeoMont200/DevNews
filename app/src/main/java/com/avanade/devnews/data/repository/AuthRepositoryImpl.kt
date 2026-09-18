@@ -43,4 +43,30 @@ class AuthRepositoryImpl @Inject constructor(
     override fun logout() {
        firebaseAuth.signOut()
     }
+
+    override suspend fun register(
+        email: String,
+        password: String
+    ) : Result<User> {
+        return  try {
+            val result =
+                firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+
+            val firebaseUser = result.user
+
+            if (firebaseUser != null) {
+                val user = User(
+                    id = firebaseUser.uid,
+                    name = firebaseUser.displayName ?: "",
+                    email = firebaseUser.email ?: ""
+                )
+                Result.success(user)
+            } else {
+                Result.failure(Exception("User registration failed"))
+            }
+        }
+        catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

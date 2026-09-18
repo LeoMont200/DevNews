@@ -1,4 +1,4 @@
-package com.avanade.devnews.ui.login
+package com.avanade.devnews.ui.cadastro
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,7 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,39 +26,35 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.R
-import com.avanade.devnews.feature.auth.login.presentation.LoginViewModel
+import com.avanade.devnews.feature.auth.register.presentation.RegisterViewModel
 import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsPasswordField
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.logEvent
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     modifier: Modifier = Modifier,
-    viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {},
-    onGoToRegister: () -> Unit = {}
+    viewModel: RegisterViewModel = hiltViewModel(),
+    onRegisterSuccess: () -> Unit = {},
+    onGoToLogin: () -> Unit = {}
 ) {
-    val spacing = DevNewsDesignTokens.spacing
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-    var username by rememberSaveable { mutableStateOf("") }
+    val spacing = DevNewsDesignTokens.spacing
+    var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var rememberMe by rememberSaveable { mutableStateOf(false) }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
 
-    LaunchedEffect(uiState.isLoginSuccess) {
-        if (uiState.isLoginSuccess) {
-            onLoginSuccess()
-            viewModel.resetLoginSuccess()
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onRegisterSuccess()
+            viewModel.resetRegisterSuccess()
         }
     }
 
@@ -65,16 +62,17 @@ fun LoginScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = spacing.large)
-            .padding(top = spacing.large),
+            .padding(horizontal = spacing.medium)
+            .padding(top = spacing.medium)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.55f)
-                .height(220.dp)
-                .width(320.dp)
+                .fillMaxWidth(0.45f)
+                .height(170.dp)
+                .width(260.dp)
                 .background(
                     color = MaterialTheme.colorScheme.background,
                     shape = DevNewsDesignTokens.cardShape
@@ -82,87 +80,70 @@ fun LoginScreen(
             contentAlignment = Alignment.TopCenter
         ) {
             Image(
-                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                 painter = painterResource(id = R.drawable.logo_devnews),
                 contentDescription = "DevNews Logo",
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 12.dp)
-            )
-            Text(
-                text = "Bem-vindo ao DevNews!",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                    .padding(top = 8.dp)
             )
         }
-        Spacer(modifier = Modifier.height(spacing.medium))
+
+        Spacer(modifier = Modifier.height(spacing.small))
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(spacing.medium)
+            verticalArrangement = Arrangement.spacedBy(spacing.small)
         ) {
             Text(
-                text = "Login",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Cadastro",
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground
             )
+
+            Text(
+                text = "Crie sua conta para continuar",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = spacing.small),
-                verticalArrangement = Arrangement.spacedBy(spacing.medium)
+                verticalArrangement = Arrangement.spacedBy(spacing.small)
             ) {
                 DevNewsSearchField(
-                    value = username,
-                    onValueChange = { username = it },
-                    placeholder = "Username"
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = "Email"
                 )
                 DevNewsPasswordField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = "Password"
+                    placeholder = "Senha"
                 )
+                DevNewsPasswordField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    placeholder = "Confirmar senha",
+                )
+
                 DevNewsPrimaryActionButton(
-                    text = if (uiState.isLoading) "Entrando..." else "Login",
+                    text = if (uiState.isLoading) "Cadastrando..." else "Cadastrar",
                     onClick = {
-                        FirebaseAnalytics.getInstance(context)
-                            .logEvent("clique_botao_login", null)
-                        viewModel.login(username, password)
+                        viewModel.register(email, password, confirmPassword)
                     }
                 )
-                uiState.errorMessage?.takeIf { it.isNotBlank() }?.let { error ->
+                uiState.error?.takeIf { it.isNotBlank() }?.let { error ->
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = rememberMe,
-                            onCheckedChange = { rememberMe = it }
-                        )
-                        Text(
-                            text = "Remember me",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                    TextButton(onClick = {}) {
-                        Text(
-                            text = "Forgot password?",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
             }
         }
-        Spacer(modifier = Modifier.weight(1f))
+
+        Spacer(modifier = Modifier.height(spacing.large))
 
         Row(
             modifier = Modifier
@@ -172,13 +153,13 @@ fun LoginScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Ainda não tem conta?",
-                style = MaterialTheme.typography.bodyMedium,
+                text = "Já possui uma conta?",
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            TextButton(onClick = onGoToRegister) {
+            TextButton(onClick = onGoToLogin) {
                 Text(
-                    text = "Register",
+                    text = "Login",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -189,8 +170,8 @@ fun LoginScreen(
 
 @Preview(showBackground = true)
 @Composable
-private fun LoginScreenPreview() {
+private fun RegisterScreenPreview() {
     DevNewsTheme {
-        LoginScreen()
+        RegisterScreen()
     }
 }
