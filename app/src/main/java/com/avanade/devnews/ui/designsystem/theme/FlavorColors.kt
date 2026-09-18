@@ -3,7 +3,17 @@ package com.avanade.devnews.ui.designsystem.theme
 import androidx.compose.ui.graphics.Color
 
 enum class FlavorTheme {
-    PROD, DEV, HML
+    PROD,
+    DEV,
+    HML;
+
+    companion object {
+        fun fromBuildFlavor(flavor: String): FlavorTheme = when (flavor.lowercase()) {
+            "dev" -> DEV
+            "hml" -> HML
+            else -> PROD
+        }
+    }
 }
 
 data class FlavorColors(
