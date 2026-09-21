@@ -19,13 +19,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.avanade.devnews.R
+import com.avanade.devnews.core.notifications.PushNotificationManager
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleCard
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleUiModel
 import com.avanade.devnews.ui.designsystem.components.DevNewsBottomNavItem
 import com.avanade.devnews.ui.designsystem.components.DevNewsBottomNavigationBar
 import com.avanade.devnews.ui.designsystem.components.DevNewsCategoryChip
 import com.avanade.devnews.ui.designsystem.components.DevNewsFilterSection
+import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
@@ -56,6 +61,7 @@ private val showcaseArticles = listOf(
 @Composable
 fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
     val spacing = DevNewsDesignTokens.spacing
+    val context = LocalContext.current
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedCategory by rememberSaveable { mutableStateOf("Lorem ipsum") }
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -90,6 +96,16 @@ fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         placeholder = "Lorem ipsum dolor sit amet"
+                    )
+                    DevNewsPrimaryActionButton(
+                        text = stringResource(R.string.push_notification_test_button),
+                        onClick = {
+                            PushNotificationManager.showNotification(
+                                context = context,
+                                title = context.getString(R.string.push_notification_test_title),
+                                body = context.getString(R.string.push_notification_test_body)
+                            )
+                        }
                     )
                 }
             }
