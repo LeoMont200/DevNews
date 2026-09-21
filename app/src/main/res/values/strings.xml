@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">DevNews</string>
+    <string name="push_notification_channel_id">devnews_general_notifications</string>
+    <string name="push_notification_channel_name">Notificações do DevNews</string>
+    <string name="push_notification_channel_description">Alertas e atualizações enviadas pelo DevNews.</string>
+    <string name="push_notification_default_title">DevNews</string>
+    <string name="push_notification_test_button">Enviar notificacao teste</string>
+    <string name="push_notification_test_title">Teste de notificacao</string>
+    <string name="push_notification_test_body">Esta notificacao local confirma o fluxo exibido apos o login.</string>
 </resources>
