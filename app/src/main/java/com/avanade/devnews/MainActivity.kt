@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,19 +52,16 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermissionIfNeeded()
         enableEdgeToEdge()
         setContent {
-            var currentFlavor by remember { mutableStateOf(FlavorTheme.PROD) }
             var currentScreen by remember { mutableStateOf(MainScreen.HOME) }
 
             BackHandler(enabled = currentScreen != MainScreen.HOME) {
                 currentScreen = MainScreen.HOME
             }
 
-            DevNewsTheme(flavor = currentFlavor) {
+            DevNewsTheme(flavor = FlavorTheme.PROD) {
                 when (currentScreen) {
                     MainScreen.HOME -> {
                         HomeScreen(
-                            currentFlavor = currentFlavor,
-                            onFlavorSelected = { currentFlavor = it },
                             onOpenLogin = { currentScreen = MainScreen.LOGIN },
                             onOpenRegister = { currentScreen = MainScreen.REGISTER }
                         )
@@ -97,13 +92,9 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun HomeScreen(
-        currentFlavor: FlavorTheme,
-        onFlavorSelected: (FlavorTheme) -> Unit,
         onOpenLogin: () -> Unit,
         onOpenRegister: () -> Unit
     ) {
-        var showFlavorMenu by remember { mutableStateOf(false) }
-
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -113,26 +104,6 @@ class MainActivity : ComponentActivity() {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
-                Box {
-                    Button(onClick = { showFlavorMenu = !showFlavorMenu }) {
-                        Text(text = "Flavor: ${currentFlavor.name}")
-                    }
-                    DropdownMenu(
-                        expanded = showFlavorMenu,
-                        onDismissRequest = { showFlavorMenu = false }
-                    ) {
-                        FlavorTheme.entries.forEach { flavor ->
-                            DropdownMenuItem(
-                                text = { Text(flavor.name) },
-                                onClick = {
-                                    onFlavorSelected(flavor)
-                                    showFlavorMenu = false
-                                }
-                            )
-                        }
-                    }
-                }
-
                 Button(onClick = onOpenLogin) {
                     Text(text = "Login")
                 }
@@ -147,10 +118,8 @@ class MainActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     fun HomeScreenPreview() {
-        DevNewsTheme {
+        DevNewsTheme(flavor = FlavorTheme.PROD) {
             HomeScreen(
-                currentFlavor = FlavorTheme.PROD,
-                onFlavorSelected = {},
                 onOpenLogin = {},
                 onOpenRegister = {}
             )
