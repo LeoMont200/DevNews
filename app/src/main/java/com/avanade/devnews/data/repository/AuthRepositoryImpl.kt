@@ -43,4 +43,19 @@ class AuthRepositoryImpl @Inject constructor(
     override fun logout() {
        firebaseAuth.signOut()
     }
+
+
+    override suspend fun recoverPassword(
+        email: String
+    ): Result<Unit> {
+        return try {
+            firebaseAuth
+                .sendPasswordResetEmail(email)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
