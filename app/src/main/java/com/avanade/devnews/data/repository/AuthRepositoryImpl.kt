@@ -1,4 +1,5 @@
 package com.avanade.devnews.data.repository
+
 import com.avanade.devnews.domain.model.User
 import com.avanade.devnews.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -10,11 +11,8 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Result<User> {
-
         return try {
-
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-
             val firebaseUser = authResult.user
 
             val user = User(
@@ -24,13 +22,12 @@ class AuthRepositoryImpl @Inject constructor(
             )
 
             Result.success(user)
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     override fun getCurrentUser(): User? {
-                                                //elvis
         val firebaseUser = firebaseAuth.currentUser ?: return null
 
         return User(
@@ -41,17 +38,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun logout() {
-       firebaseAuth.signOut()
+        firebaseAuth.signOut()
     }
 
-    override suspend fun register(
-        email: String,
-        password: String
-    ) : Result<User> {
-        return  try {
-            val result =
-                firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-
+    override suspend fun register(email: String, password: String): Result<User> {
+        return try {
+            val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
 
             if (firebaseUser != null) {
@@ -64,8 +56,19 @@ class AuthRepositoryImpl @Inject constructor(
             } else {
                 Result.failure(Exception("User registration failed"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-        catch (e: Exception) {
+    }
+
+    override suspend fun recoverPassword(email: String): Result<Unit> {
+        return try {
+            firebaseAuth
+                .sendPasswordResetEmail(email)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

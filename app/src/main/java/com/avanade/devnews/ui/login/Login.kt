@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.R
 import com.avanade.devnews.feature.auth.login.presentation.LoginViewModel
-import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsPasswordField
+import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
@@ -45,7 +45,8 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit = {},
-    onGoToRegister: () -> Unit = {}
+    onGoToRegister: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val spacing = DevNewsDesignTokens.spacing
     val uiState by viewModel.uiState.collectAsState()
@@ -153,7 +154,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onForgotPasswordClick) {
                         Text(
                             text = "Forgot password?",
                             style = MaterialTheme.typography.labelLarge

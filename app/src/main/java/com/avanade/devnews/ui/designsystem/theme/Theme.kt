@@ -5,11 +5,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import com.avanade.devnews.BuildConfig
 
 @Composable
 fun DevNewsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    flavor: FlavorTheme = FlavorTheme.PROD,
+    flavor: FlavorTheme = FlavorTheme.fromBuildFlavor(BuildConfig.FLAVOR),
     content: @Composable () -> Unit
 ) {
     val colors = getFlavorColors(flavor)

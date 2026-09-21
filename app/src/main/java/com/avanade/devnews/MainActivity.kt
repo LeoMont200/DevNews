@@ -1,10 +1,14 @@
 package com.avanade.devnews
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,24 +27,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.avanade.devnews.ui.cadastro.RegisterScreen
+import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.theme.FlavorTheme
-import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.login.LoginScreen
+import com.avanade.devnews.ui.login.RecoveryScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 private enum class MainScreen {
     HOME,
     LOGIN,
     REGISTER,
+    RECOVERY,
     SHOWCASE
 }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestNotificationPermissionIfNeeded()
         enableEdgeToEdge()
         setContent {
             var currentFlavor by remember { mutableStateOf(FlavorTheme.PROD) }
@@ -63,7 +74,8 @@ class MainActivity : ComponentActivity() {
                     MainScreen.LOGIN -> {
                         LoginScreen(
                             onLoginSuccess = { currentScreen = MainScreen.SHOWCASE },
-                            onGoToRegister = { currentScreen = MainScreen.REGISTER }
+                            onGoToRegister = { currentScreen = MainScreen.REGISTER },
+                            onForgotPasswordClick = { currentScreen = MainScreen.RECOVERY }
                         )
                     }
                     MainScreen.REGISTER -> {
@@ -71,6 +83,9 @@ class MainActivity : ComponentActivity() {
                             onRegisterSuccess = { currentScreen = MainScreen.LOGIN },
                             onGoToLogin = { currentScreen = MainScreen.LOGIN }
                         )
+                    }
+                    MainScreen.RECOVERY -> {
+                        RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.LOGIN })
                     }
                     MainScreen.SHOWCASE -> {
                         DesignSystemShowcaseScreen()
@@ -123,7 +138,6 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Button(onClick = onOpenRegister) {
-
                     Text(text = "Register")
                 }
             }
@@ -141,5 +155,22 @@ class MainActivity : ComponentActivity() {
                 onOpenRegister = {}
             )
         }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+
+        val permissionState = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        )
+
+        if (permissionState == PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }
