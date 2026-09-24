@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.R
 import com.avanade.devnews.feature.auth.login.presentation.LoginViewModel
+import com.avanade.devnews.ui.designsystem.components.DevNewsPasswordField
 import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
@@ -43,7 +44,9 @@ import com.google.firebase.analytics.logEvent
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    onGoToRegister: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val spacing = DevNewsDesignTokens.spacing
     val uiState by viewModel.uiState.collectAsState()
@@ -115,7 +118,7 @@ fun LoginScreen(
                     onValueChange = { username = it },
                     placeholder = "Username"
                 )
-                DevNewsSearchField(
+                DevNewsPasswordField(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = "Password"
@@ -151,7 +154,7 @@ fun LoginScreen(
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
-                    TextButton(onClick = {}) {
+                    TextButton(onClick = onForgotPasswordClick) {
                         Text(
                             text = "Forgot password?",
                             style = MaterialTheme.typography.labelLarge
@@ -161,6 +164,27 @@ fun LoginScreen(
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = spacing.medium),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Ainda não tem conta?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            TextButton(onClick = onGoToRegister) {
+                Text(
+                    text = "Register",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 
