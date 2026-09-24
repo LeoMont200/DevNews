@@ -17,15 +17,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.avanade.devnews.feature.auth.session.presentation.SessionViewModel
 import com.avanade.devnews.ui.cadastro.RegisterScreen
 import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
@@ -52,9 +56,31 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermissionIfNeeded()
         enableEdgeToEdge()
         setContent {
-            var currentScreen by remember { mutableStateOf(MainScreen.HOME) }
+            val sessionViewModel: SessionViewModel = hiltViewModel()
+            val sessionUiState by sessionViewModel.uiState.collectAsState()
+            var currentScreen by rememberSaveable { mutableStateOf(MainScreen.HOME) }
+            var hasResolvedStartDestination by rememberSaveable { mutableStateOf(false) }
 
-            BackHandler(enabled = currentScreen != MainScreen.HOME) {
+            LaunchedEffect(
+                sessionUiState.isCheckingSession,
+                sessionUiState.isSessionActive,
+                hasResolvedStartDestination
+            ) {
+                if (!hasResolvedStartDestination && !sessionUiState.isCheckingSession) {
+                    currentScreen = if (sessionUiState.isSessionActive) {
+                        MainScreen.SHOWCASE
+                    } else {
+                        MainScreen.HOME
+                    }
+                    hasResolvedStartDestination = true
+                }
+            }
+
+            BackHandler(
+                enabled = currentScreen == MainScreen.LOGIN ||
+                    currentScreen == MainScreen.REGISTER ||
+                    currentScreen == MainScreen.RECOVERY
+            ) {
                 currentScreen = MainScreen.HOME
             }
 
@@ -68,7 +94,9 @@ class MainActivity : ComponentActivity() {
                     }
                     MainScreen.LOGIN -> {
                         LoginScreen(
-                            onLoginSuccess = { currentScreen = MainScreen.SHOWCASE },
+                            onLoginSuccess = {
+                                currentScreen = MainScreen.SHOWCASE
+                            },
                             onGoToRegister = { currentScreen = MainScreen.REGISTER },
                             onForgotPasswordClick = { currentScreen = MainScreen.RECOVERY }
                         )
@@ -83,7 +111,12 @@ class MainActivity : ComponentActivity() {
                         RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.LOGIN })
                     }
                     MainScreen.SHOWCASE -> {
-                        DesignSystemShowcaseScreen()
+                        DesignSystemShowcaseScreen(
+                            onLogoutClick = {
+                                sessionViewModel.logout()
+                                currentScreen = MainScreen.HOME
+                            }
+                        )
                     }
                 }
             }

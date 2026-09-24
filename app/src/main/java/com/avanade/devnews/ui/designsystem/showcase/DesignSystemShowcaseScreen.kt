@@ -60,7 +60,10 @@ private val showcaseArticles = listOf(
 )
 
 @Composable
-fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
+fun DesignSystemShowcaseScreen(
+    modifier: Modifier = Modifier,
+    onLogoutClick: () -> Unit = {}
+) {
     val spacing = DevNewsDesignTokens.spacing
     val context = LocalContext.current
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -107,6 +110,10 @@ fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
                                 body = context.getString(R.string.push_notification_test_body)
                             )
                         }
+                    )
+                    DevNewsPrimaryActionButton(
+                        text = "Logout",
+                        onClick = onLogoutClick
                     )
                 }
             }
