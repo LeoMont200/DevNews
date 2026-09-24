@@ -44,7 +44,7 @@ import com.google.firebase.analytics.logEvent
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (Boolean) -> Unit = {},
     onGoToRegister: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
 ) {
@@ -57,7 +57,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isLoginSuccess) {
         if (uiState.isLoginSuccess) {
-            onLoginSuccess()
+            onLoginSuccess(rememberMe)
             viewModel.resetLoginSuccess()
         }
     }
@@ -128,7 +128,7 @@ fun LoginScreen(
                     onClick = {
                         FirebaseAnalytics.getInstance(context)
                             .logEvent("clique_botao_login", null)
-                        viewModel.login(username, password)
+                        viewModel.login(username, password, rememberMe)
                     }
                 )
                 uiState.errorMessage?.takeIf { it.isNotBlank() }?.let { error ->

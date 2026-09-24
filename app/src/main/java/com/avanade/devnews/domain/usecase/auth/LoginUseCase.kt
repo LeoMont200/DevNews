@@ -10,8 +10,15 @@ class LoginUseCase @Inject constructor(
 
     suspend operator fun invoke (
         email: String,
-        password: String
+        password: String,
+        rememberMe: Boolean
     ) : Result<User> {
-        return repository.login(email, password)
+        val result = repository.login(email, password)
+
+        if (result.isSuccess) {
+            repository.setRememberMe(rememberMe)
+        }
+
+        return result
     }
 }

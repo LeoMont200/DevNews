@@ -1,5 +1,6 @@
 package com.avanade.devnews.data.repository
 
+import android.content.SharedPreferences
 import com.avanade.devnews.domain.model.User
 import com.avanade.devnews.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -7,8 +8,13 @@ import javax.inject.Inject
 import kotlinx.coroutines.tasks.await
 
 class AuthRepositoryImpl @Inject constructor(
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val sharedPreferences: SharedPreferences
 ) : AuthRepository {
+    companion object {
+        private const val KEY_REMEMBER_ME = "remember_me"
+    }
+
 
     override suspend fun login(email: String, password: String): Result<User> {
         return try {
@@ -37,7 +43,28 @@ class AuthRepositoryImpl @Inject constructor(
         )
     }
 
+    override fun setRememberMe(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_REMEMBER_ME, enabled).apply()
+    }
+
+    override fun isRememberMeEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_REMEMBER_ME, false)
+    }
+
+    override fun hasActiveSession(): Boolean {
+        val hasFirebaseUser = firebaseAuth.currentUser != null
+        val rememberMeEnabled = isRememberMeEnabled()
+
+        if (hasFirebaseUser && !rememberMeEnabled) {
+            firebaseAuth.signOut()
+            return false
+        }
+
+        return hasFirebaseUser && rememberMeEnabled
+    }
+
     override fun logout() {
+        setRememberMe(false)
         firebaseAuth.signOut()
     }
 

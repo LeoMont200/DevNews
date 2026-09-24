@@ -23,7 +23,7 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun login(email: String, password: String) {
+    fun login(email: String, password: String, rememberMe: Boolean) {
         if (email.isBlank() || password.isBlank()) {
             _uiState.value = LoginUiState(
                 isLoading = false,
@@ -36,7 +36,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = LoginUiState(isLoading = true)
 
-            val result = loginUseCase(email, password)
+            val result = loginUseCase(email, password, rememberMe)
 
             if (result.isSuccess) {
                 _uiState.value = LoginUiState(
