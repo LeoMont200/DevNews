@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,7 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val sessionViewModel: SessionViewModel = hiltViewModel()
             val sessionUiState by sessionViewModel.uiState.collectAsState()
-            var currentScreen by rememberSaveable { mutableStateOf<MainScreen>(MainScreen.Home) }
+            var currentScreen by remember { mutableStateOf<MainScreen>(MainScreen.Home) }
             var hasResolvedStartDestination by rememberSaveable { mutableStateOf(false) }
 
             LaunchedEffect(

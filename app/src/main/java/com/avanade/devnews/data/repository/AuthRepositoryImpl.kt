@@ -1,8 +1,6 @@
 package com.avanade.devnews.data.repository
 
-<<<<<<< HEAD
 import android.content.SharedPreferences
->>>>>>> origin/integracao-noticias
 import com.avanade.devnews.domain.model.User
 import com.avanade.devnews.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -44,7 +42,6 @@ class AuthRepositoryImpl @Inject constructor(
         )
     }
 
-<<<<<<< HEAD
     override fun setRememberMe(enabled: Boolean) {
         sharedPreferences.edit().putBoolean(KEY_REMEMBER_ME, enabled).apply()
     }
