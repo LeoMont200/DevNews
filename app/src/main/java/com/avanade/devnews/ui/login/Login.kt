@@ -44,7 +44,7 @@ import com.google.firebase.analytics.logEvent
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: (Boolean) -> Unit = {},
+    onLoginSuccess: () -> Unit = {},
     onGoToRegister: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {}
 ) {
@@ -57,7 +57,7 @@ fun LoginScreen(
 
     LaunchedEffect(uiState.isLoginSuccess) {
         if (uiState.isLoginSuccess) {
-            onLoginSuccess(rememberMe)
+            onLoginSuccess()
             viewModel.resetLoginSuccess()
         }
     }

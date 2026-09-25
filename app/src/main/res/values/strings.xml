@@ -7,4 +7,10 @@
     <string name="push_notification_test_button">Enviar notificacao teste</string>
     <string name="push_notification_test_title">Teste de notificacao</string>
     <string name="push_notification_test_body">Esta notificacao local confirma o fluxo exibido apos o login.</string>
+    <string name="news_list_title">Noticias disponiveis</string>
+    <string name="news_list_subtitle">Ultimas noticias carregadas da NewsAPI em uma lista paginada.</string>
+    <string name="news_retry_button">Tentar novamente</string>
+    <string name="news_error_title">Nao foi possivel carregar as noticias</string>
+    <string name="news_back_button">Voltar para a lista</string>
+    <string name="news_open_full_article_button">Abrir noticia completa</string>
 </resources>

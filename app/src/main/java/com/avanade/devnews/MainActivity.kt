@@ -29,21 +29,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.feature.auth.session.presentation.SessionViewModel
+import com.avanade.devnews.feature.news.detail.presentation.NewsDetailScreen
+import com.avanade.devnews.feature.news.list.presentation.NewsListScreen
 import com.avanade.devnews.ui.cadastro.RegisterScreen
-import com.avanade.devnews.ui.designsystem.showcase.DesignSystemShowcaseScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.theme.FlavorTheme
 import com.avanade.devnews.ui.login.LoginScreen
 import com.avanade.devnews.ui.login.RecoveryScreen
 import dagger.hilt.android.AndroidEntryPoint
 
-private enum class MainScreen {
-    HOME,
-    LOGIN,
-    REGISTER,
-    RECOVERY,
-    SHOWCASE
+private sealed interface MainScreen {
+    data object Home : MainScreen
+    data object Login : MainScreen
+    data object Register : MainScreen
+    data object Recovery : MainScreen
+    data object NewsList : MainScreen
+    data class NewsDetail(val article: NewsArticle) : MainScreen
 }
 
 @AndroidEntryPoint
@@ -58,64 +61,71 @@ class MainActivity : ComponentActivity() {
         setContent {
             val sessionViewModel: SessionViewModel = hiltViewModel()
             val sessionUiState by sessionViewModel.uiState.collectAsState()
-            var currentScreen by rememberSaveable { mutableStateOf(MainScreen.HOME) }
+            var currentScreen by rememberSaveable { mutableStateOf<MainScreen>(MainScreen.Home) }
             var hasResolvedStartDestination by rememberSaveable { mutableStateOf(false) }
 
             LaunchedEffect(
-                sessionUiState.isCheckingSession,
-                sessionUiState.isSessionActive,
-                hasResolvedStartDestination
+               sessionUiState.isCheckingSession,
+               sessionUiState.isSessionActive,
+               hasResolvedStartDestination
             ) {
-                if (!hasResolvedStartDestination && !sessionUiState.isCheckingSession) {
-                    currentScreen = if (sessionUiState.isSessionActive) {
-                        MainScreen.SHOWCASE
-                    } else {
-                        MainScreen.HOME
-                    }
-                    hasResolvedStartDestination = true
-                }
+               if (!hasResolvedStartDestination && !sessionUiState.isCheckingSession) {
+                   currentScreen = if (sessionUiState.isSessionActive) {
+                       MainScreen.NewsList
+                   } else {
+                       MainScreen.Home
+                   }
+                   hasResolvedStartDestination = true
+               }
             }
 
-            BackHandler(
-                enabled = currentScreen == MainScreen.LOGIN ||
-                    currentScreen == MainScreen.REGISTER ||
-                    currentScreen == MainScreen.RECOVERY
-            ) {
-                currentScreen = MainScreen.HOME
+            BackHandler(enabled = currentScreen != MainScreen.Home) {
+               currentScreen = when (currentScreen) {
+                   MainScreen.Home -> MainScreen.Home
+                   MainScreen.Login -> MainScreen.Home
+                   MainScreen.Register -> MainScreen.Home
+                   MainScreen.Recovery -> MainScreen.Login
+                   MainScreen.NewsList -> MainScreen.Home
+                   is MainScreen.NewsDetail -> MainScreen.NewsList
+               }
             }
 
             DevNewsTheme(flavor = FlavorTheme.PROD) {
                 when (currentScreen) {
-                    MainScreen.HOME -> {
+                    MainScreen.Home -> {
                         HomeScreen(
-                            onOpenLogin = { currentScreen = MainScreen.LOGIN },
-                            onOpenRegister = { currentScreen = MainScreen.REGISTER }
+                            onOpenLogin = { currentScreen = MainScreen.Login },
+                            onOpenRegister = { currentScreen = MainScreen.Register }
                         )
                     }
-                    MainScreen.LOGIN -> {
+                    MainScreen.Login -> {
                         LoginScreen(
-                            onLoginSuccess = {
-                                currentScreen = MainScreen.SHOWCASE
-                            },
-                            onGoToRegister = { currentScreen = MainScreen.REGISTER },
-                            onForgotPasswordClick = { currentScreen = MainScreen.RECOVERY }
+                            onLoginSuccess = { currentScreen = MainScreen.NewsList },
+                            onGoToRegister = { currentScreen = MainScreen.Register },
+                            onForgotPasswordClick = { currentScreen = MainScreen.Recovery }
                         )
                     }
-                    MainScreen.REGISTER -> {
+                    MainScreen.Register -> {
                         RegisterScreen(
-                            onRegisterSuccess = { currentScreen = MainScreen.LOGIN },
-                            onGoToLogin = { currentScreen = MainScreen.LOGIN }
+                            onRegisterSuccess = { currentScreen = MainScreen.Login },
+                            onGoToLogin = { currentScreen = MainScreen.Login }
                         )
                     }
-                    MainScreen.RECOVERY -> {
-                        RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.LOGIN })
+                    MainScreen.Recovery -> {
+                        RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.Login })
                     }
-                    MainScreen.SHOWCASE -> {
-                        DesignSystemShowcaseScreen(
-                            onLogoutClick = {
-                                sessionViewModel.logout()
-                                currentScreen = MainScreen.HOME
+                    MainScreen.NewsList -> {
+                        NewsListScreen(
+                            onArticleClick = { article ->
+                                currentScreen = MainScreen.NewsDetail(article)
                             }
+                        )
+                    }
+                    is MainScreen.NewsDetail -> {
+                        val article = (currentScreen as MainScreen.NewsDetail).article
+                        NewsDetailScreen(
+                            article = article,
+                            onBack = { currentScreen = MainScreen.NewsList }
                         )
                     }
                 }
