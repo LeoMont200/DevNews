@@ -3,20 +3,22 @@ package com.avanade.devnews.feature.news.list.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.avanade.devnews.domain.model.NewsArticle
-import com.avanade.devnews.domain.usecase.news.FilterNewsByAuthorUseCase
-import com.avanade.devnews.domain.usecase.news.FilterNewsByTitleUseCase
 import com.avanade.devnews.domain.usecase.news.GetNewsPageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class NewsListUiState(
     val articles: List<NewsArticle> = emptyList(),
-    val filteredArticles: List<NewsArticle> = emptyList(),
+    val displayedArticles: List<NewsArticle> = emptyList(),
     val searchQuery: String = "",
     val authorSearchQuery: String = "",
     val isLoading: Boolean = false,
@@ -28,9 +30,7 @@ data class NewsListUiState(
 
 @HiltViewModel
 class NewsListViewModel @Inject constructor(
-    private val getNewsPageUseCase: GetNewsPageUseCase,
-    private val filterNewsByTitleUseCase: FilterNewsByTitleUseCase,
-    private val filterNewsByAuthorUseCase: FilterNewsByAuthorUseCase
+    private val getNewsPageUseCase: GetNewsPageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NewsListUiState())
@@ -39,8 +39,10 @@ class NewsListViewModel @Inject constructor(
     private var currentPage = 1
     private val pageSize = 20
     private var selectedQuery = DEFAULT_NEWS_QUERY
+    private val debouncedSearchQuery = MutableStateFlow("")
 
     init {
+        observeDebouncedTextFilters()
         loadNextPage()
     }
 
@@ -72,10 +74,9 @@ class NewsListViewModel @Inject constructor(
                 val currentAuthorSearchQuery = _uiState.value.authorSearchQuery
                 val mergedArticles = (_uiState.value.articles + page.articles)
                     .distinctBy { article -> article.articleUrl }
-                val filteredArticles = applyTextFilters(
+                val displayedArticles = applyAuthorFilterLocally(
                     articles = mergedArticles,
-                    titleQuery = currentSearchQuery,
-                    authorQuery = currentAuthorSearchQuery
+                    authorSearchQuery = currentAuthorSearchQuery
                 )
                 val endReached = page.articles.isEmpty() ||
                     mergedArticles.size >= page.totalResults
@@ -83,7 +84,7 @@ class NewsListViewModel @Inject constructor(
                 currentPage += 1
                 _uiState.value = NewsListUiState(
                     articles = mergedArticles,
-                    filteredArticles = filteredArticles,
+                    displayedArticles = displayedArticles,
                     searchQuery = currentSearchQuery,
                     authorSearchQuery = currentAuthorSearchQuery,
                     isLoading = false,
@@ -107,34 +108,40 @@ class NewsListViewModel @Inject constructor(
         loadNextPage()
     }
 
-    fun updateSearchQuery(query: String) {
-        _uiState.update { state ->
-            state.copy(
-                searchQuery = query,
-                filteredArticles = applyTextFilters(
-                    articles = state.articles,
-                    titleQuery = query,
-                    authorQuery = state.authorSearchQuery
-                )
-            )
-        }
+    fun applySearch(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        debouncedSearchQuery.value = query
     }
 
-    fun updateAuthorSearchQuery(query: String) {
+    fun applyAuthorFilter(query: String) {
         _uiState.update { state ->
             state.copy(
                 authorSearchQuery = query,
-                filteredArticles = applyTextFilters(
+                displayedArticles = applyAuthorFilterLocally(
                     articles = state.articles,
-                    titleQuery = state.searchQuery,
-                    authorQuery = query
+                    authorSearchQuery = query
                 )
             )
         }
     }
 
+    fun clearTextFilters() {
+        _uiState.update { state ->
+            state.copy(
+                searchQuery = "",
+                authorSearchQuery = "",
+                displayedArticles = state.articles
+            )
+        }
+        debouncedSearchQuery.value = ""
+        refreshWithCurrentFilters()
+    }
+
     fun applyCategoryFilter(category: String) {
-        val nextQuery = categoryToQuery(category)
+        val nextQuery = buildApiQuery(
+            category = category,
+            searchQuery = _uiState.value.searchQuery
+        )
         _uiState.update { it.copy(selectedCategory = category) }
 
         if (nextQuery == selectedQuery) {
@@ -151,13 +158,63 @@ class NewsListViewModel @Inject constructor(
         loadNextPage()
     }
 
-    private fun applyTextFilters(
+    private fun observeDebouncedTextFilters() {
+        viewModelScope.launch {
+            debouncedSearchQuery
+                .drop(1)
+                .debounce(600)
+                .distinctUntilChanged()
+                .collectLatest {
+                    refreshWithCurrentFilters()
+                }
+        }
+    }
+
+    private fun refreshWithCurrentFilters() {
+        val state = _uiState.value
+        val nextQuery = buildApiQuery(
+            category = state.selectedCategory,
+            searchQuery = state.searchQuery
+        )
+
+        if (nextQuery == selectedQuery && state.articles.isNotEmpty()) {
+            return
+        }
+
+        selectedQuery = nextQuery
+        currentPage = 1
+        _uiState.value = NewsListUiState(
+            selectedCategory = state.selectedCategory,
+            searchQuery = state.searchQuery,
+            authorSearchQuery = state.authorSearchQuery
+        )
+        loadNextPage()
+    }
+
+    private fun buildApiQuery(
+        category: String,
+        searchQuery: String
+    ): String {
+        val categoryTerm = categoryToQuery(category).takeIf { category.isNotBlank() }
+        val terms = listOfNotNull(
+            categoryTerm,
+            searchQuery.trim().takeIf { it.isNotBlank() }
+        )
+
+        return if (terms.isEmpty()) DEFAULT_NEWS_QUERY else terms.joinToString(" ")
+    }
+
+    private fun applyAuthorFilterLocally(
         articles: List<NewsArticle>,
-        titleQuery: String,
-        authorQuery: String
+        authorSearchQuery: String
     ): List<NewsArticle> {
-        val filteredByTitle = filterNewsByTitleUseCase(articles, titleQuery)
-        return filterNewsByAuthorUseCase(filteredByTitle, authorQuery)
+        if (authorSearchQuery.isBlank()) {
+            return articles
+        }
+
+        return articles.filter { article ->
+            article.author.contains(authorSearchQuery, ignoreCase = true)
+        }
     }
 
     private fun categoryToQuery(category: String): String {

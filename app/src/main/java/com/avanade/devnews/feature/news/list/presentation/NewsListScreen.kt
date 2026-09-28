@@ -87,7 +87,7 @@ fun NewsListScreen(
     var selectedDateFilter by rememberSaveable { mutableStateOf(DateFilterOption.Recentes) }
 
     fun onCategorySelected(category: String) {
-        viewModel.updateSearchQuery("")
+        viewModel.applySearch("")
         viewModel.applyCategoryFilter(category)
     }
 
@@ -182,7 +182,7 @@ fun NewsListScreen(
                         }
 
                         if (
-                            uiState.filteredArticles.isEmpty() &&
+                            uiState.displayedArticles.isEmpty() &&
                             (uiState.searchQuery.isNotBlank() || uiState.authorSearchQuery.isNotBlank())
                         ) {
                             item {
@@ -194,7 +194,7 @@ fun NewsListScreen(
                             }
                         } else {
                             items(
-                                items = uiState.filteredArticles,
+                                items = uiState.displayedArticles,
                                 key = { article -> article.articleUrl }
                             ) { article ->
                                 DevNewsArticleCard(
@@ -238,7 +238,7 @@ fun NewsListScreen(
                     ) {
                         NewsListFiltersHeader(
                             searchQuery = uiState.searchQuery,
-                            onSearchQueryChange = viewModel::updateSearchQuery,
+                            onSearchQueryChange = viewModel::applySearch,
                             isFilterDialogOpen = isFilterDialogOpen,
                             selectedCategory = uiState.selectedCategory,
                             onFilterClick = { isFilterDialogOpen = true },
@@ -259,11 +259,11 @@ fun NewsListScreen(
             NewsFilterDialog(
                 authorSearchQuery = uiState.authorSearchQuery,
                 selectedDateFilter = selectedDateFilter,
-                onAuthorSearchChange = viewModel::updateAuthorSearchQuery,
+                onAuthorSearchChange = viewModel::applyAuthorFilter,
                 onDateFilterSelect = { selectedDateFilter = it },
                 onClearFilters = {
-                    viewModel.updateAuthorSearchQuery("")
-                    onCategorySelected("")
+                    viewModel.clearTextFilters()
+                    viewModel.applyCategoryFilter("")
                     selectedDateFilter = DateFilterOption.Recentes
                 },
                 onDismiss = { isFilterDialogOpen = false }
