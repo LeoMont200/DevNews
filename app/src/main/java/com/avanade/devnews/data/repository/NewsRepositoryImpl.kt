@@ -11,7 +11,7 @@ class NewsRepositoryImpl @Inject constructor(
     private val newsApiService: NewsApiService
 ) : NewsRepository {
 
-    override suspend fun getNews(page: Int, pageSize: Int): Result<NewsPage> {
+    override suspend fun getNews(page: Int, pageSize: Int, query: String): Result<NewsPage> {
         if (BuildConfig.NEWS_API_KEY.isBlank()) {
             return Result.failure(IllegalStateException("News API key is not configured."))
         }
@@ -19,9 +19,9 @@ class NewsRepositoryImpl @Inject constructor(
         return runCatching {
             val response = newsApiService.getEverything(
                 apiKey = BuildConfig.NEWS_API_KEY,
-                query = "technology",
+                query = query,
                 sortBy = "publishedAt",
-                language = "en",
+                language = "pt",
                 page = page,
                 pageSize = pageSize
             )

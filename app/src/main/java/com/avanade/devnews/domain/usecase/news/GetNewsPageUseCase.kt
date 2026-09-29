@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetNewsPageUseCase @Inject constructor(
     private val repository: NewsRepository
 ) {
-    suspend operator fun invoke(page: Int, pageSize: Int): Result<NewsPage> {
-        return repository.getNews(page = page, pageSize = pageSize)
+    suspend operator fun invoke(page: Int, pageSize: Int, query: String): Result<NewsPage> {
+        return repository.getNews(page = page, pageSize = pageSize, query = query)
     }
 }
