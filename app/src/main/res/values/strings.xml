@@ -13,4 +13,8 @@
     <string name="news_error_title">Nao foi possivel carregar as noticias</string>
     <string name="news_back_button">Voltar para a lista</string>
     <string name="news_open_full_article_button">Abrir noticia completa</string>
+    <string name="news_notification_history_button">Historico de notificacoes</string>
+    <string name="notification_history_title">Historico de notificacoes</string>
+    <string name="notification_history_back_button">Voltar</string>
+    <string name="notification_history_empty_state">Nenhuma notificacao ainda</string>
 </resources>

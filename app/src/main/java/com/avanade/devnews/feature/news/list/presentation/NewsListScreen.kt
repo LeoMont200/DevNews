@@ -10,10 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +48,7 @@ import kotlinx.coroutines.flow.map
 fun NewsListScreen(
     modifier: Modifier = Modifier,
     onArticleClick: (NewsArticle) -> Unit,
+    onNotificationHistoryClick: () -> Unit = {},
     viewModel: NewsListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -67,7 +74,10 @@ fun NewsListScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            NewsListTopBar(onNotificationClick = onNotificationHistoryClick)
+        }
     ) { innerPadding ->
         when {
             uiState.isLoading && uiState.articles.isEmpty() -> {
@@ -112,16 +122,6 @@ fun NewsListScreen(
                                 text = stringResource(R.string.news_list_subtitle),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            DevNewsPrimaryActionButton(
-                                text = stringResource(R.string.push_notification_test_button),
-                                onClick = {
-                                    PushNotificationManager.showNotification(
-                                        context = context,
-                                        title = context.getString(R.string.push_notification_test_title),
-                                        body = context.getString(R.string.push_notification_test_body)
-                                    )
-                                }
                             )
                         }
                     }
@@ -219,4 +219,24 @@ private fun formatPublishInfo(sourceName: String, publishedAt: String): String {
     } else {
         "$sourceName - $formattedDate"
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewsListTopBar(
+    onNotificationClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        modifier = modifier,
+        title = { Text(stringResource(R.string.news_list_title)) },
+        actions = {
+            IconButton(onClick = onNotificationClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = stringResource(R.string.news_notification_history_button)
+                )
+            }
+        }
+    )
 }
