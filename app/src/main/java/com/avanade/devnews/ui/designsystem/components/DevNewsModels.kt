@@ -1,5 +1,7 @@
 package com.avanade.devnews.ui.designsystem.components
 
+import androidx.compose.ui.graphics.vector.ImageVector
+
 data class DevNewsArticleUiModel(
     val category: String,
     val title: String,
@@ -10,5 +12,6 @@ data class DevNewsArticleUiModel(
 
 data class DevNewsBottomNavItem(
     val label: String,
+    val icon: ImageVector,
     val isSelected: Boolean
 )

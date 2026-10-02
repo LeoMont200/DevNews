@@ -3,14 +3,13 @@ package com.avanade.devnews.ui.designsystem.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,17 +41,14 @@ fun DevNewsBottomNavigationBar(
                     .padding(horizontal = 12.dp, vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (item.isSelected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
-                            },
-                            shape = DevNewsDesignTokens.badgeShape
-                        )
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.label,
+                    tint = if (item.isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

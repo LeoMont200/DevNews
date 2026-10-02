@@ -9,6 +9,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -76,10 +81,26 @@ fun DesignSystemShowcaseScreen(
         bottomBar = {
             DevNewsBottomNavigationBar(
                 items = listOf(
-                    DevNewsBottomNavItem(label = "Lorem ipsum", isSelected = selectedTab == 0),
-                    DevNewsBottomNavItem(label = "Lorem amet", isSelected = selectedTab == 1),
-                    DevNewsBottomNavItem(label = "Lorem elit", isSelected = selectedTab == 2),
-                    DevNewsBottomNavItem(label = "Lorem tempor", isSelected = selectedTab == 3)
+                    DevNewsBottomNavItem(
+                        label = "Lorem ipsum",
+                        icon = Icons.Outlined.Home,
+                        isSelected = selectedTab == 0
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem amet",
+                        icon = Icons.Outlined.FavoriteBorder,
+                        isSelected = selectedTab == 1
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem elit",
+                        icon = Icons.Outlined.Notifications,
+                        isSelected = selectedTab == 2
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem tempor",
+                        icon = Icons.Outlined.PersonOutline,
+                        isSelected = selectedTab == 3
+                    )
                 ),
                 onItemClick = { selectedTab = it }
             )
