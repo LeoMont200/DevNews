@@ -34,6 +34,7 @@ import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.feature.auth.session.presentation.SessionViewModel
 import com.avanade.devnews.feature.news.detail.presentation.NewsDetailScreen
 import com.avanade.devnews.feature.news.list.presentation.NewsListScreen
+import com.avanade.devnews.feature.notifications.presentation.NotificationHistoryScreen
 import com.avanade.devnews.ui.cadastro.RegisterScreen
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.theme.FlavorTheme
@@ -48,6 +49,7 @@ private sealed interface MainScreen {
     data object Recovery : MainScreen
     data object NewsList : MainScreen
     data class NewsDetail(val article: NewsArticle) : MainScreen
+    data object NotificationHistory : MainScreen
 }
 
 @AndroidEntryPoint
@@ -88,6 +90,7 @@ class MainActivity : ComponentActivity() {
                    MainScreen.Recovery -> MainScreen.Login
                    MainScreen.NewsList -> MainScreen.Home
                    is MainScreen.NewsDetail -> MainScreen.NewsList
+                   MainScreen.NotificationHistory -> MainScreen.NewsList
                }
             }
 
@@ -119,6 +122,9 @@ class MainActivity : ComponentActivity() {
                         NewsListScreen(
                             onArticleClick = { article ->
                                 currentScreen = MainScreen.NewsDetail(article)
+                            },
+                            onNotificationHistoryClick = {
+                                currentScreen = MainScreen.NotificationHistory
                             }
                         )
                     }
@@ -127,6 +133,11 @@ class MainActivity : ComponentActivity() {
                         NewsDetailScreen(
                             article = article,
                             onBack = { currentScreen = MainScreen.NewsList }
+                        )
+                    }
+                    MainScreen.NotificationHistory -> {
+                        NotificationHistoryScreen(
+                            onBackClick = { currentScreen = MainScreen.NewsList }
                         )
                     }
                 }

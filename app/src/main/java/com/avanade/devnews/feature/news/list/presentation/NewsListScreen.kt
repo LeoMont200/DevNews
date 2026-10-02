@@ -8,17 +8,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,17 +36,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.avanade.devnews.R
-import com.avanade.devnews.core.notifications.PushNotificationManager
 import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleCard
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleUiModel
@@ -77,12 +79,12 @@ private enum class DateFilterOption {
 fun NewsListScreen(
     modifier: Modifier = Modifier,
     onArticleClick: (NewsArticle) -> Unit,
+    onNotificationHistoryClick: () -> Unit = {},
     viewModel: NewsListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val spacing = DevNewsDesignTokens.spacing
-    val context = LocalContext.current
     var isFilterDialogOpen by rememberSaveable { mutableStateOf(false) }
     var selectedDateFilter by rememberSaveable { mutableStateOf(DateFilterOption.Recentes) }
 
@@ -109,7 +111,10 @@ fun NewsListScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            NewsListTopBar(onNotificationClick = onNotificationHistoryClick)
+        }
     ) { innerPadding ->
         when {
             uiState.isLoading && uiState.articles.isEmpty() -> {
@@ -167,16 +172,6 @@ fun NewsListScreen(
                                     text = stringResource(R.string.news_list_subtitle),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                DevNewsPrimaryActionButton(
-                                    text = stringResource(R.string.push_notification_test_button),
-                                    onClick = {
-                                        PushNotificationManager.showNotification(
-                                            context = context,
-                                            title = context.getString(R.string.push_notification_test_title),
-                                            body = context.getString(R.string.push_notification_test_body)
-                                        )
-                                    }
                                 )
                             }
                         }
@@ -337,9 +332,9 @@ private fun NewsFilterDialog(
 ) {
     val spacing = DevNewsDesignTokens.spacing
 
-    Dialog(
+    androidx.compose.ui.window.Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -510,4 +505,24 @@ private fun formatPublishInfo(sourceName: String, publishedAt: String): String {
     } else {
         "$sourceName - $formattedDate"
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewsListTopBar(
+    onNotificationClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBar(
+        modifier = modifier,
+        title = { Text(stringResource(R.string.news_list_title)) },
+        actions = {
+            IconButton(onClick = onNotificationClick) {
+                Icon(
+                    imageVector = Icons.Outlined.Notifications,
+                    contentDescription = stringResource(R.string.news_notification_history_button)
+                )
+            }
+        }
+    )
 }
