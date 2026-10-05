@@ -35,6 +35,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +87,81 @@ private enum class NewsOrigin {
     Favorites
 }
 
+private val mainScreenSaver: Saver<MainScreen, Any> = mapSaver(
+    save = { screen ->
+        when (screen) {
+            MainScreen.Home -> mapOf("type" to "home")
+            MainScreen.Login -> mapOf("type" to "login")
+            MainScreen.Register -> mapOf("type" to "register")
+            MainScreen.Recovery -> mapOf("type" to "recovery")
+            MainScreen.NewsList -> mapOf("type" to "news_list")
+            MainScreen.Favorites -> mapOf("type" to "favorites")
+            MainScreen.NotificationHistory -> mapOf("type" to "notification_history")
+            MainScreen.Profile -> mapOf("type" to "profile")
+            is MainScreen.NewsDetail -> mapOf(
+                "type" to "news_detail",
+                "origin" to screen.origin.name,
+                "sourceName" to screen.article.sourceName,
+                "author" to screen.article.author,
+                "title" to screen.article.title,
+                "description" to screen.article.description,
+                "content" to screen.article.content,
+                "articleUrl" to screen.article.articleUrl,
+                "imageUrl" to (screen.article.imageUrl ?: ""),
+                "publishedAt" to screen.article.publishedAt
+            )
+            is MainScreen.NewsWebView -> mapOf(
+                "type" to "news_webview",
+                "url" to screen.url,
+                "origin" to screen.origin.name,
+                "sourceName" to screen.article.sourceName,
+                "author" to screen.article.author,
+                "title" to screen.article.title,
+                "description" to screen.article.description,
+                "content" to screen.article.content,
+                "articleUrl" to screen.article.articleUrl,
+                "imageUrl" to (screen.article.imageUrl ?: ""),
+                "publishedAt" to screen.article.publishedAt
+            )
+        }
+    },
+    restore = { restored ->
+        fun restoredArticle(): NewsArticle {
+            return NewsArticle(
+                sourceName = restored["sourceName"] as String,
+                author = restored["author"] as String,
+                title = restored["title"] as String,
+                description = restored["description"] as String,
+                content = restored["content"] as String,
+                articleUrl = restored["articleUrl"] as String,
+                imageUrl = (restored["imageUrl"] as String).ifBlank { null },
+                publishedAt = restored["publishedAt"] as String
+            )
+        }
+
+        when (restored["type"] as String) {
+            "home" -> MainScreen.Home
+            "login" -> MainScreen.Login
+            "register" -> MainScreen.Register
+            "recovery" -> MainScreen.Recovery
+            "news_list" -> MainScreen.NewsList
+            "favorites" -> MainScreen.Favorites
+            "notification_history" -> MainScreen.NotificationHistory
+            "profile" -> MainScreen.Profile
+            "news_detail" -> MainScreen.NewsDetail(
+                article = restoredArticle(),
+                origin = NewsOrigin.valueOf(restored["origin"] as String)
+            )
+            "news_webview" -> MainScreen.NewsWebView(
+                url = restored["url"] as String,
+                article = restoredArticle(),
+                origin = NewsOrigin.valueOf(restored["origin"] as String)
+            )
+            else -> MainScreen.Home
+        }
+    }
+)
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher =
@@ -97,7 +174,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val sessionViewModel: SessionViewModel = hiltViewModel()
             val sessionUiState by sessionViewModel.uiState.collectAsState()
-            var currentScreen by remember { mutableStateOf<MainScreen>(MainScreen.Home) }
+            var currentScreen by rememberSaveable(stateSaver = mainScreenSaver) {
+                mutableStateOf<MainScreen>(MainScreen.Home)
+            }
             var hasResolvedStartDestination by rememberSaveable { mutableStateOf(false) }
 
             LaunchedEffect(
