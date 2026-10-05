@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.feature.auth.session.presentation.SessionViewModel
 import com.avanade.devnews.feature.news.detail.presentation.NewsDetailScreen
+import com.avanade.devnews.feature.news.detail.presentation.NewsWebViewScreen
 import com.avanade.devnews.feature.news.list.presentation.NewsListScreen
 import com.avanade.devnews.feature.notifications.presentation.NotificationHistoryScreen
 import com.avanade.devnews.ui.cadastro.RegisterScreen
@@ -50,6 +51,7 @@ private sealed interface MainScreen {
     data object NewsList : MainScreen
     data class NewsDetail(val article: NewsArticle) : MainScreen
     data object NotificationHistory : MainScreen
+    data class NewsWebView(val url: String) : MainScreen
 }
 
 @AndroidEntryPoint
@@ -91,6 +93,7 @@ class MainActivity : ComponentActivity() {
                    MainScreen.NewsList -> MainScreen.Home
                    is MainScreen.NewsDetail -> MainScreen.NewsList
                    MainScreen.NotificationHistory -> MainScreen.NewsList
+                   is MainScreen.NewsWebView -> MainScreen.NewsList
                }
             }
 
@@ -132,12 +135,21 @@ class MainActivity : ComponentActivity() {
                         val article = (currentScreen as MainScreen.NewsDetail).article
                         NewsDetailScreen(
                             article = article,
-                            onBack = { currentScreen = MainScreen.NewsList }
+                            onBack = { currentScreen = MainScreen.NewsList },
+                            onOpenWebView = { url ->
+                                currentScreen = MainScreen.NewsWebView(url)
+                            }
                         )
                     }
                     MainScreen.NotificationHistory -> {
                         NotificationHistoryScreen(
                             onBackClick = { currentScreen = MainScreen.NewsList }
+                        )
+                    }
+                    is MainScreen.NewsWebView -> {
+                        val url = (currentScreen as MainScreen.NewsWebView).url
+                        NewsWebViewScreen(
+                            url = url
                         )
                     }
                 }

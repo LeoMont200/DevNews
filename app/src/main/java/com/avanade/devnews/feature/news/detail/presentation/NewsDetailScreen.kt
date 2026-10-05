@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,8 +13,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.avanade.devnews.R
 import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
@@ -26,10 +29,10 @@ import java.util.Locale
 fun NewsDetailScreen(
     article: NewsArticle,
     modifier: Modifier = Modifier,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenWebView: (String) -> Unit = {}
 ) {
     val spacing = DevNewsDesignTokens.spacing
-    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         modifier = modifier,
@@ -47,6 +50,18 @@ fun NewsDetailScreen(
                 text = stringResource(R.string.news_back_button),
                 onClick = onBack
             )
+            
+            article.imageUrl?.takeIf { it.isNotBlank() }?.let { imageUrl ->
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = article.title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            
             Text(
                 text = article.sourceName,
                 style = MaterialTheme.typography.labelLarge,
@@ -64,19 +79,21 @@ fun NewsDetailScreen(
             article.description.takeIf { it.isNotBlank() }?.let { description ->
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = Int.MAX_VALUE
                 )
             }
             article.content.takeIf { it.isNotBlank() }?.let { content ->
                 Text(
                     text = content,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = Int.MAX_VALUE
                 )
             }
             DevNewsPrimaryActionButton(
                 text = stringResource(R.string.news_open_full_article_button),
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { uriHandler.openUri(article.articleUrl) }
+                onClick = { onOpenWebView(article.articleUrl) }
             )
         }
     }
