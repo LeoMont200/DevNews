@@ -39,4 +39,8 @@
     <string name="favorites_empty_state">Nenhuma noticia favorita ainda</string>
     <string name="profile_title">Perfil</string>
     <string name="profile_logout_button">Logout</string>
+    <string name="news_add_favorite_button">Favoritar noticia</string>
+    <string name="news_remove_favorite_button">Remover dos favoritos</string>
+    <string name="news_favorite_notification_title">Noticia favoritada</string>
+    <string name="news_favorite_notification_body">A noticia \"%1$s\" foi salva nos favoritos.</string>
 </resources>

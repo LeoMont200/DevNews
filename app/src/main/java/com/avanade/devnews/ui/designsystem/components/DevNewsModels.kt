@@ -7,7 +7,8 @@ data class DevNewsArticleUiModel(
     val title: String,
     val summary: String,
     val publishInfo: String,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val isFavorite: Boolean = false
 )
 
 data class DevNewsBottomNavItem(

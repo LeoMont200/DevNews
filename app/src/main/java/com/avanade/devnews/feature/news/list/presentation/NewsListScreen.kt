@@ -38,11 +38,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.avanade.devnews.R
+import com.avanade.devnews.core.notifications.PushNotificationManager
 import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleCard
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleUiModel
@@ -84,9 +86,14 @@ fun NewsListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val context = LocalContext.current
     val spacing = DevNewsDesignTokens.spacing
     var isFilterDialogOpen by rememberSaveable { mutableStateOf(false) }
     var selectedDateFilter by rememberSaveable { mutableStateOf(DateFilterOption.Recentes) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshCurrentUserBinding()
+    }
 
     fun onCategorySelected(category: String) {
         viewModel.applySearch("")
@@ -193,8 +200,25 @@ fun NewsListScreen(
                                 key = { article -> article.articleUrl }
                             ) { article ->
                                 DevNewsArticleCard(
-                                    article = article.toUiModel(),
-                                    onClick = { onArticleClick(article) }
+                                    article = article.toUiModel(
+                                        isFavorite = article.articleUrl in uiState.favoriteArticleUrls
+                                    ),
+                                    onClick = { onArticleClick(article) },
+                                    onFavoriteClick = {
+                                        val wasFavorite = article.articleUrl in uiState.favoriteArticleUrls
+                                        viewModel.onFavoriteClick(article)
+
+                                        if (!wasFavorite && viewModel.canFavorite()) {
+                                            PushNotificationManager.showNotification(
+                                                context = context,
+                                                title = context.getString(R.string.news_favorite_notification_title),
+                                                body = context.getString(
+                                                    R.string.news_favorite_notification_body,
+                                                    article.title
+                                                )
+                                            )
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -484,13 +508,14 @@ private fun NewsMessageState(
     }
 }
 
-private fun NewsArticle.toUiModel(): DevNewsArticleUiModel {
+private fun NewsArticle.toUiModel(isFavorite: Boolean): DevNewsArticleUiModel {
     return DevNewsArticleUiModel(
         category = sourceName,
         title = title,
         summary = description.ifBlank { content.ifBlank { title } },
         publishInfo = formatPublishInfo(sourceName, publishedAt),
-        imageUrl = imageUrl
+        imageUrl = imageUrl,
+        isFavorite = isFavorite
     )
 }
 

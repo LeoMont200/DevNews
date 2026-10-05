@@ -62,8 +62,17 @@ private sealed interface MainScreen {
     data object Favorites : MainScreen
     data object NotificationHistory : MainScreen
     data object Profile : MainScreen
-    data class NewsDetail(val article: NewsArticle) : MainScreen
-    data class NewsWebView(val url: String, val article: NewsArticle?) : MainScreen
+    data class NewsDetail(val article: NewsArticle, val origin: NewsOrigin) : MainScreen
+    data class NewsWebView(
+        val url: String,
+        val article: NewsArticle,
+        val origin: NewsOrigin
+    ) : MainScreen
+}
+
+private enum class NewsOrigin {
+    NewsList,
+    Favorites
 }
 
 @AndroidEntryPoint
@@ -106,9 +115,17 @@ class MainActivity : ComponentActivity() {
                     MainScreen.Favorites -> MainScreen.NewsList
                     MainScreen.NotificationHistory -> MainScreen.NewsList
                     MainScreen.Profile -> MainScreen.NewsList
-                    is MainScreen.NewsDetail -> MainScreen.NewsList
+                    is MainScreen.NewsDetail -> {
+                        when (screen.origin) {
+                            NewsOrigin.NewsList -> MainScreen.NewsList
+                            NewsOrigin.Favorites -> MainScreen.Favorites
+                        }
+                    }
                     is MainScreen.NewsWebView -> {
-                        screen.article?.let { MainScreen.NewsDetail(it) } ?: MainScreen.NewsList
+                        MainScreen.NewsDetail(
+                            article = screen.article,
+                            origin = screen.origin
+                        )
                     }
                 }
             }
@@ -146,7 +163,6 @@ class MainActivity : ComponentActivity() {
                         MainScreen.Login -> {
                             LoginScreen(
                                 onLoginSuccess = {
-                                    sessionViewModel.refreshSessionState()
                                     currentScreen = MainScreen.NewsList
                                 },
                                 onGoToRegister = { currentScreen = MainScreen.Register },
@@ -169,7 +185,10 @@ class MainActivity : ComponentActivity() {
                             NewsListScreen(
                                 modifier = modifier,
                                 onArticleClick = { article ->
-                                    currentScreen = MainScreen.NewsDetail(article)
+                                    currentScreen = MainScreen.NewsDetail(
+                                        article = article,
+                                        origin = NewsOrigin.NewsList
+                                    )
                                 },
                                 onNotificationHistoryClick = {
                                     currentScreen = MainScreen.NotificationHistory
@@ -178,7 +197,15 @@ class MainActivity : ComponentActivity() {
                         }
 
                         MainScreen.Favorites -> {
-                            FavoritesScreen(modifier = modifier)
+                            FavoritesScreen(
+                                modifier = modifier,
+                                onArticleClick = { article ->
+                                    currentScreen = MainScreen.NewsDetail(
+                                        article = article,
+                                        origin = NewsOrigin.Favorites
+                                    )
+                                }
+                            )
                         }
 
                         MainScreen.NotificationHistory -> {
@@ -203,11 +230,17 @@ class MainActivity : ComponentActivity() {
                             NewsDetailScreen(
                                 article = screen.article,
                                 modifier = modifier,
-                                onBack = { currentScreen = MainScreen.NewsList },
+                                onBack = {
+                                    currentScreen = when (screen.origin) {
+                                        NewsOrigin.NewsList -> MainScreen.NewsList
+                                        NewsOrigin.Favorites -> MainScreen.Favorites
+                                    }
+                                },
                                 onOpenWebView = { url ->
                                     currentScreen = MainScreen.NewsWebView(
                                         url = url,
-                                        article = screen.article
+                                        article = screen.article,
+                                        origin = screen.origin
                                     )
                                 }
                             )
