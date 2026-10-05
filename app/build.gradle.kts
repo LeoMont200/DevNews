@@ -93,4 +93,8 @@ dependencies {
     implementation(libs.coil.compose)
     ksp(libs.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
+    val room_version = "3.0.3"
+        implementation("androidx.room3:room3-runtime:$room_version")
+        ksp("androidx.room3:room3-compiler:$room_version")
+
 }

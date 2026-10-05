@@ -9,16 +9,16 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,6 +40,7 @@ import com.avanade.devnews.domain.model.NewsArticle
 import com.avanade.devnews.feature.auth.session.presentation.SessionViewModel
 import com.avanade.devnews.feature.favorites.presentation.FavoritesScreen
 import com.avanade.devnews.feature.news.detail.presentation.NewsDetailScreen
+import com.avanade.devnews.feature.news.detail.presentation.NewsWebViewScreen
 import com.avanade.devnews.feature.news.list.presentation.NewsListScreen
 import com.avanade.devnews.feature.notifications.presentation.NotificationHistoryScreen
 import com.avanade.devnews.feature.profile.presentation.ProfileScreen
@@ -59,9 +60,10 @@ private sealed interface MainScreen {
     data object Recovery : MainScreen
     data object NewsList : MainScreen
     data object Favorites : MainScreen
-    data class NewsDetail(val article: NewsArticle) : MainScreen
     data object NotificationHistory : MainScreen
     data object Profile : MainScreen
+    data class NewsDetail(val article: NewsArticle) : MainScreen
+    data class NewsWebView(val url: String, val article: NewsArticle?) : MainScreen
 }
 
 @AndroidEntryPoint
@@ -80,60 +82,67 @@ class MainActivity : ComponentActivity() {
             var hasResolvedStartDestination by rememberSaveable { mutableStateOf(false) }
 
             LaunchedEffect(
-               sessionUiState.isCheckingSession,
-               sessionUiState.isSessionActive,
-               hasResolvedStartDestination
+                sessionUiState.isCheckingSession,
+                sessionUiState.isSessionActive,
+                hasResolvedStartDestination
             ) {
-               if (!hasResolvedStartDestination && !sessionUiState.isCheckingSession) {
-                   currentScreen = if (sessionUiState.isSessionActive) {
-                       MainScreen.NewsList
-                   } else {
-                       MainScreen.Home
-                   }
-                   hasResolvedStartDestination = true
-               }
+                if (!hasResolvedStartDestination && !sessionUiState.isCheckingSession) {
+                    currentScreen = if (sessionUiState.isSessionActive) {
+                        MainScreen.NewsList
+                    } else {
+                        MainScreen.Home
+                    }
+                    hasResolvedStartDestination = true
+                }
             }
 
             BackHandler(enabled = currentScreen != MainScreen.Home) {
-               currentScreen = when (currentScreen) {
-                   MainScreen.Home -> MainScreen.Home
-                   MainScreen.Login -> MainScreen.Home
-                   MainScreen.Register -> MainScreen.Home
-                   MainScreen.Recovery -> MainScreen.Login
-                   MainScreen.NewsList -> MainScreen.Home
-                   MainScreen.Favorites -> MainScreen.NewsList
-                   is MainScreen.NewsDetail -> MainScreen.NewsList
-                   MainScreen.NotificationHistory -> MainScreen.NewsList
-                   MainScreen.Profile -> MainScreen.NewsList
-               }
+                currentScreen = when (val screen = currentScreen) {
+                    MainScreen.Home -> MainScreen.Home
+                    MainScreen.Login -> MainScreen.Home
+                    MainScreen.Register -> MainScreen.Home
+                    MainScreen.Recovery -> MainScreen.Login
+                    MainScreen.NewsList -> MainScreen.Home
+                    MainScreen.Favorites -> MainScreen.NewsList
+                    MainScreen.NotificationHistory -> MainScreen.NewsList
+                    MainScreen.Profile -> MainScreen.NewsList
+                    is MainScreen.NewsDetail -> MainScreen.NewsList
+                    is MainScreen.NewsWebView -> {
+                        screen.article?.let { MainScreen.NewsDetail(it) } ?: MainScreen.NewsList
+                    }
+                }
             }
 
             DevNewsTheme(flavor = FlavorTheme.PROD) {
-                val authenticatedScreens = setOf(
+                val rootNewsScreens = setOf(
                     MainScreen.NewsList,
                     MainScreen.Favorites,
                     MainScreen.NotificationHistory,
                     MainScreen.Profile
                 )
                 val showBottomNavigation =
-                    currentScreen in authenticatedScreens || currentScreen is MainScreen.NewsDetail
+                    currentScreen in rootNewsScreens ||
+                        currentScreen is MainScreen.NewsDetail ||
+                        currentScreen is MainScreen.NewsWebView
                 val selectedBottomTabIndex = when (currentScreen) {
                     MainScreen.NewsList -> 0
                     MainScreen.Favorites -> 1
                     MainScreen.NotificationHistory -> 2
                     MainScreen.Profile -> 3
                     is MainScreen.NewsDetail -> 0
+                    is MainScreen.NewsWebView -> 0
                     else -> -1
                 }
 
                 val screenContent: @Composable (Modifier) -> Unit = { modifier ->
-                    when (currentScreen) {
+                    when (val screen = currentScreen) {
                         MainScreen.Home -> {
                             HomeScreen(
                                 onOpenLogin = { currentScreen = MainScreen.Login },
                                 onOpenRegister = { currentScreen = MainScreen.Register }
                             )
                         }
+
                         MainScreen.Login -> {
                             LoginScreen(
                                 onLoginSuccess = {
@@ -144,15 +153,18 @@ class MainActivity : ComponentActivity() {
                                 onForgotPasswordClick = { currentScreen = MainScreen.Recovery }
                             )
                         }
+
                         MainScreen.Register -> {
                             RegisterScreen(
                                 onRegisterSuccess = { currentScreen = MainScreen.Login },
                                 onGoToLogin = { currentScreen = MainScreen.Login }
                             )
                         }
+
                         MainScreen.Recovery -> {
                             RecoveryScreen(onBackToLoginClick = { currentScreen = MainScreen.Login })
                         }
+
                         MainScreen.NewsList -> {
                             NewsListScreen(
                                 modifier = modifier,
@@ -164,23 +176,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
                         MainScreen.Favorites -> {
                             FavoritesScreen(modifier = modifier)
                         }
-                        is MainScreen.NewsDetail -> {
-                            val article = (currentScreen as MainScreen.NewsDetail).article
-                            NewsDetailScreen(
-                                article = article,
-                                modifier = modifier,
-                                onBack = { currentScreen = MainScreen.NewsList }
-                            )
-                        }
+
                         MainScreen.NotificationHistory -> {
                             NotificationHistoryScreen(
                                 modifier = modifier,
                                 onBackClick = { currentScreen = MainScreen.NewsList }
                             )
                         }
+
                         MainScreen.Profile -> {
                             ProfileScreen(
                                 modifier = modifier,
@@ -189,6 +196,27 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = MainScreen.Home
                                     hasResolvedStartDestination = false
                                 }
+                            )
+                        }
+
+                        is MainScreen.NewsDetail -> {
+                            NewsDetailScreen(
+                                article = screen.article,
+                                modifier = modifier,
+                                onBack = { currentScreen = MainScreen.NewsList },
+                                onOpenWebView = { url ->
+                                    currentScreen = MainScreen.NewsWebView(
+                                        url = url,
+                                        article = screen.article
+                                    )
+                                }
+                            )
+                        }
+
+                        is MainScreen.NewsWebView -> {
+                            NewsWebViewScreen(
+                                url = screen.url,
+                                modifier = modifier
                             )
                         }
                     }
