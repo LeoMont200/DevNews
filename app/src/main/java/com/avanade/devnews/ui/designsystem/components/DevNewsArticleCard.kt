@@ -8,24 +8,33 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.avanade.devnews.R
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
 
 @Composable
 fun DevNewsArticleCard(
     article: DevNewsArticleUiModel,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onFavoriteClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier
@@ -69,6 +78,33 @@ fun DevNewsArticleCard(
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.labelMedium
                 )
+
+                Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    IconButton(onClick = { onFavoriteClick?.invoke() }) {
+                        Icon(
+                            imageVector = if (article.isFavorite) {
+                                Icons.Filled.Favorite
+                            } else {
+                                Icons.Outlined.FavoriteBorder
+                            },
+                            contentDescription = if (article.isFavorite) {
+                                stringResource(R.string.news_remove_favorite_button)
+                            } else {
+                                stringResource(R.string.news_add_favorite_button)
+                            },
+                            tint = if (article.isFavorite) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                            }
+                        )
+                    }
+                }
             }
 
             Column(modifier = Modifier.padding(16.dp)) {

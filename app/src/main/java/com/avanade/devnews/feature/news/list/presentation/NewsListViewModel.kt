@@ -2,7 +2,10 @@ package com.avanade.devnews.feature.news.list.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.avanade.devnews.data.local.dao.FavoriteNewsDao
+import com.avanade.devnews.data.mapper.toFavoriteEntity
 import com.avanade.devnews.domain.model.NewsArticle
+import com.avanade.devnews.domain.repository.AuthRepository
 import com.avanade.devnews.domain.usecase.news.GetNewsPageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -14,6 +17,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 data class NewsListUiState(
@@ -25,12 +29,15 @@ data class NewsListUiState(
     val isLoadingNextPage: Boolean = false,
     val endReached: Boolean = false,
     val errorMessage: String? = null,
-    val selectedCategory: String = ""
+    val selectedCategory: String = "",
+    val favoriteArticleUrls: Set<String> = emptySet()
 )
 
 @HiltViewModel
 class NewsListViewModel @Inject constructor(
-    private val getNewsPageUseCase: GetNewsPageUseCase
+    private val getNewsPageUseCase: GetNewsPageUseCase,
+    private val favoriteNewsDao: FavoriteNewsDao,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NewsListUiState())
@@ -40,10 +47,58 @@ class NewsListViewModel @Inject constructor(
     private val pageSize = 20
     private var selectedQuery = DEFAULT_NEWS_QUERY
     private val debouncedSearchQuery = MutableStateFlow("")
+    private var currentUserId = ""
+    private var observeFavoritesJob: Job? = null
 
     init {
+        refreshCurrentUserBinding()
         observeDebouncedTextFilters()
         loadNextPage()
+    }
+
+    fun refreshCurrentUserBinding() {
+        val nextUserId = authRepository.getCurrentUser()?.id.orEmpty()
+        if (nextUserId == currentUserId && observeFavoritesJob != null) {
+            return
+        }
+
+        currentUserId = nextUserId
+        observeFavoritesJob?.cancel()
+
+        if (currentUserId.isBlank()) {
+            _uiState.update { it.copy(favoriteArticleUrls = emptySet()) }
+            return
+        }
+
+        observeFavoritesJob = viewModelScope.launch {
+            favoriteNewsDao.observeFavoriteUrls(currentUserId).collectLatest { urls ->
+                _uiState.update {
+                    it.copy(favoriteArticleUrls = urls.toSet())
+                }
+            }
+        }
+    }
+
+    fun onFavoriteClick(article: NewsArticle) {
+        refreshCurrentUserBinding()
+        if (currentUserId.isBlank()) return
+
+        viewModelScope.launch {
+            val favoriteUrls = _uiState.value.favoriteArticleUrls
+            if (article.articleUrl in favoriteUrls) {
+                favoriteNewsDao.removeFavorite(
+                    userId = currentUserId,
+                    articleUrl = article.articleUrl
+                )
+            } else {
+                favoriteNewsDao.upsertFavorite(article.toFavoriteEntity(currentUserId))
+            }
+        }
+    }
+
+    fun canFavorite(): Boolean {
+        refreshCurrentUserBinding()
+        return currentUserId.isNotBlank()
     }
 
     fun loadNextPage() {
@@ -72,6 +127,7 @@ class NewsListViewModel @Inject constructor(
                 val currentSelectedCategory = _uiState.value.selectedCategory
                 val currentSearchQuery = _uiState.value.searchQuery
                 val currentAuthorSearchQuery = _uiState.value.authorSearchQuery
+                val currentFavoriteUrls = _uiState.value.favoriteArticleUrls
                 val mergedArticles = (_uiState.value.articles + page.articles)
                     .distinctBy { article -> article.articleUrl }
                 val displayedArticles = applyAuthorFilterLocally(
@@ -90,7 +146,8 @@ class NewsListViewModel @Inject constructor(
                     isLoading = false,
                     isLoadingNextPage = false,
                     endReached = endReached,
-                    selectedCategory = currentSelectedCategory
+                    selectedCategory = currentSelectedCategory,
+                    favoriteArticleUrls = currentFavoriteUrls
                 )
             }.onFailure { exception ->
                 _uiState.update {
@@ -153,7 +210,8 @@ class NewsListViewModel @Inject constructor(
         _uiState.value = NewsListUiState(
             selectedCategory = category,
             searchQuery = _uiState.value.searchQuery,
-            authorSearchQuery = _uiState.value.authorSearchQuery
+            authorSearchQuery = _uiState.value.authorSearchQuery,
+            favoriteArticleUrls = _uiState.value.favoriteArticleUrls
         )
         loadNextPage()
     }
@@ -186,7 +244,8 @@ class NewsListViewModel @Inject constructor(
         _uiState.value = NewsListUiState(
             selectedCategory = state.selectedCategory,
             searchQuery = state.searchQuery,
-            authorSearchQuery = state.authorSearchQuery
+            authorSearchQuery = state.authorSearchQuery,
+            favoriteArticleUrls = state.favoriteArticleUrls
         )
         loadNextPage()
     }
