@@ -150,13 +150,13 @@ fun LoginScreen(
                             onCheckedChange = { rememberMe = it }
                         )
                         Text(
-                            text = "Remember me",
+                            text = "Lembre-me",
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
                     TextButton(onClick = onForgotPasswordClick) {
                         Text(
-                            text = "Forgot password?",
+                            text = "Esqueceu a senha?",
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -179,7 +179,7 @@ fun LoginScreen(
             )
             TextButton(onClick = onGoToRegister) {
                 Text(
-                    text = "Register",
+                    text = "Cadastro",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )

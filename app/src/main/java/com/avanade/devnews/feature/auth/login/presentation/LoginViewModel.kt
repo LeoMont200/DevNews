@@ -8,6 +8,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class LoginUiState(
@@ -22,18 +24,16 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    private var clearErrorJob: Job? = null
 
     fun login(email: String, password: String, rememberMe: Boolean) {
         if (email.isBlank() || password.isBlank()) {
-            _uiState.value = LoginUiState(
-                isLoading = false,
-                isLoginSuccess = false,
-                errorMessage = "Email e senha são obrigatórios."
-            )
+            showTemporaryError("Email e senha são obrigatórios.")
             return
         }
 
         viewModelScope.launch {
+            clearErrorJob?.cancel()
             _uiState.value = LoginUiState(isLoading = true)
 
             val result = loginUseCase(email, password, rememberMe)
@@ -45,16 +45,26 @@ class LoginViewModel @Inject constructor(
                     errorMessage = null
                 )
             } else {
-                _uiState.value = LoginUiState(
-                    isLoading = false,
-                    isLoginSuccess = false,
-                    errorMessage = result.exceptionOrNull()?.message ?: "Erro ao fazer login."
-                )
+                showTemporaryError(result.exceptionOrNull()?.message ?: "Erro ao fazer login.")
             }
         }
     }
 
     fun resetLoginSuccess() {
         _uiState.value = _uiState.value.copy(isLoginSuccess = false)
+    }
+
+    private fun showTemporaryError(message: String) {
+        clearErrorJob?.cancel()
+        _uiState.value = LoginUiState(
+            isLoading = false,
+            isLoginSuccess = false,
+            errorMessage = message
+        )
+
+        clearErrorJob = viewModelScope.launch {
+            delay(3_000)
+            _uiState.value = _uiState.value.copy(errorMessage = null)
+        }
     }
 }
