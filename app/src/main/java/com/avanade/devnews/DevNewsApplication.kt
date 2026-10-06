@@ -12,6 +12,7 @@ class DevNewsApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         PushNotificationManager.createNotificationChannel(this)
+        FirebaseMessaging.getInstance().isAutoInitEnabled = true
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
                 Log.w(TAG, "Unable to fetch FCM token", task.exception)

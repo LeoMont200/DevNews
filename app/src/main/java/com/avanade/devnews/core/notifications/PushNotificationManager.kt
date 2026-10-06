@@ -37,7 +37,10 @@ object PushNotificationManager {
         context: Context,
         title: String,
         body: String
-    ) {
+    ): Boolean {
+        createNotificationChannel(context)
+        NotificationHistoryStore.recordNotification(context, title, body)
+
         if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(
@@ -45,7 +48,7 @@ object PushNotificationManager {
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            return
+            return false
         }
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -76,5 +79,6 @@ object PushNotificationManager {
             System.currentTimeMillis().toInt(),
             notification
         )
+        return true
     }
 }
