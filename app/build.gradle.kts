@@ -1,10 +1,12 @@
 import java.util.Properties
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    jacoco
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 
@@ -69,6 +71,14 @@ android {
         buildConfig = true
         compose = true
     }
+    testOptions {
+        unitTests.all {
+            it.extensions.configure(org.gradle.testing.jacoco.plugins.JacocoTaskExtension::class.java) {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -93,7 +103,63 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.room.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.register<JacocoReport>("jacocoDevDebugUnitTestReport") {
+    dependsOn("testDevDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val coverageIncludes = listOf(
+        "**/data/mapper/*.class",
+        "**/domain/usecase/**/*.class",
+        "**/feature/news/list/presentation/*ViewModel*.class",
+        "**/feature/favorites/presentation/*ViewModel*.class"
+    )
+
+    classDirectories.setFrom(
+        files(
+            fileTree(layout.buildDirectory.dir("intermediates/built_in_kotlinc/devDebug/compileDevDebugKotlin/classes")) {
+                include(coverageIncludes)
+                exclude(
+                    "**/*\$*",
+                    "**/BuildConfig.*",
+                    "**/R.class",
+                    "**/R$*.class"
+                )
+            },
+            fileTree(layout.buildDirectory.dir("intermediates/javac/devDebug/compileDevDebugJavaWithJavac/classes")) {
+                include(coverageIncludes)
+                exclude(
+                    "**/*\$*",
+                    "**/BuildConfig.*",
+                    "**/R.class",
+                    "**/R$*.class"
+                )
+            }
+        )
+    )
+
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(
+        fileTree(buildDir) {
+            include(
+                "outputs/unit_test_code_coverage/devDebugUnitTest/testDevDebugUnitTest.exec",
+                "jacoco/testDevDebugUnitTest.exec"
+            )
+        }
+    )
 }
