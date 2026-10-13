@@ -26,7 +26,7 @@ class NewsRepositoryImpl @Inject constructor(
                 pageSize = pageSize
             )
 
-            if (response.status != "ok") {
+            if (response.status != "ok") {      
                 error("NewsAPI returned an invalid status: ${response.status}")
             }
 
