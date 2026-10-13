@@ -55,6 +55,22 @@ android {
         }
     }
 
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            versionNameSuffix = "-dev"
+        }
+        create("hml") {
+            dimension = "environment"
+            versionNameSuffix = "-hml"
+        }
+        create("prod") {
+            dimension = "environment"
+        }
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
