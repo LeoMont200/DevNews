@@ -11,5 +11,20 @@ interface AuthRepository {
 
     fun getCurrentUser(): User?
 
+    fun setRememberMe(enabled: Boolean)
+
+    fun isRememberMeEnabled(): Boolean
+
+    fun hasActiveSession(): Boolean
+
     fun logout()
+
+    suspend fun register(
+        email: String,
+        password: String
+    ): Result<User>
+
+    suspend fun recoverPassword(
+        email: String
+    ): Result<Unit>
 }

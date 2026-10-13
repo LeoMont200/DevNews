@@ -9,6 +9,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,13 +25,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.avanade.devnews.R
+import com.avanade.devnews.core.notifications.PushNotificationManager
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleCard
 import com.avanade.devnews.ui.designsystem.components.DevNewsArticleUiModel
 import com.avanade.devnews.ui.designsystem.components.DevNewsBottomNavItem
 import com.avanade.devnews.ui.designsystem.components.DevNewsBottomNavigationBar
 import com.avanade.devnews.ui.designsystem.components.DevNewsCategoryChip
 import com.avanade.devnews.ui.designsystem.components.DevNewsFilterSection
+import com.avanade.devnews.ui.designsystem.components.DevNewsPrimaryActionButton
 import com.avanade.devnews.ui.designsystem.components.DevNewsSearchField
 import com.avanade.devnews.ui.designsystem.theme.DevNewsTheme
 import com.avanade.devnews.ui.designsystem.tokens.DevNewsDesignTokens
@@ -55,8 +65,12 @@ private val showcaseArticles = listOf(
 )
 
 @Composable
-fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
+fun DesignSystemShowcaseScreen(
+    modifier: Modifier = Modifier,
+    onLogoutClick: () -> Unit = {}
+) {
     val spacing = DevNewsDesignTokens.spacing
+    val context = LocalContext.current
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedCategory by rememberSaveable { mutableStateOf("Lorem ipsum") }
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -67,10 +81,26 @@ fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
         bottomBar = {
             DevNewsBottomNavigationBar(
                 items = listOf(
-                    DevNewsBottomNavItem(label = "Lorem ipsum", isSelected = selectedTab == 0),
-                    DevNewsBottomNavItem(label = "Lorem amet", isSelected = selectedTab == 1),
-                    DevNewsBottomNavItem(label = "Lorem elit", isSelected = selectedTab == 2),
-                    DevNewsBottomNavItem(label = "Lorem tempor", isSelected = selectedTab == 3)
+                    DevNewsBottomNavItem(
+                        label = "Lorem ipsum",
+                        icon = Icons.Outlined.Home,
+                        isSelected = selectedTab == 0
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem amet",
+                        icon = Icons.Outlined.FavoriteBorder,
+                        isSelected = selectedTab == 1
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem elit",
+                        icon = Icons.Outlined.Notifications,
+                        isSelected = selectedTab == 2
+                    ),
+                    DevNewsBottomNavItem(
+                        label = "Lorem tempor",
+                        icon = Icons.Outlined.PersonOutline,
+                        isSelected = selectedTab == 3
+                    )
                 ),
                 onItemClick = { selectedTab = it }
             )
@@ -91,6 +121,20 @@ fun DesignSystemShowcaseScreen(modifier: Modifier = Modifier) {
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
                         placeholder = "Lorem ipsum dolor sit amet"
+                    )
+                    DevNewsPrimaryActionButton(
+                        text = stringResource(R.string.push_notification_test_button),
+                        onClick = {
+                            PushNotificationManager.showNotification(
+                                context = context,
+                                title = context.getString(R.string.push_notification_test_title),
+                                body = context.getString(R.string.push_notification_test_body)
+                            )
+                        }
+                    )
+                    DevNewsPrimaryActionButton(
+                        text = "Logout",
+                        onClick = onLogoutClick
                     )
                 }
             }
